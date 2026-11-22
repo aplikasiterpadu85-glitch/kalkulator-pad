@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#eff6ff">
+  <title>Kalkulator Warna</title>
+  <style>
+    :root{color-scheme:light;--ink:#172033;--muted:#64748b;--line:#e2e8f0;--blue:#2563eb}
+    *{box-sizing:border-box}
+    html,body{overscroll-behavior-x:none;overscroll-behavior-y:none}
+    body{margin:0;min-height:100vh;padding:16px 13px 28px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:radial-gradient(ellipse at 12% 0%,#ffffff 0%,transparent 34%),linear-gradient(160deg,#dbeafe 0%,#f8fafc 48%,#d8efff 100%)}
+    button,input{font:inherit}
+    .header-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+    .lock-toggle{width:43px;height:43px;border:0;border-bottom:4px solid #087b36;border-radius:14px;background:linear-gradient(145deg,#4ade80,#16a34a 65%,#0f8a43);color:#fff;font-size:19px;font-weight:900;box-shadow:0 7px 13px #16a34a38,inset 0 2px 2px #ffffff75;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .1s,box-shadow .1s}
+    .lock-toggle:focus-visible,.settings-open:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+    html.screen-locked,html.screen-locked body{overscroll-behavior:none;overscroll-behavior-x:none;overscroll-behavior-y:none;touch-action:none}
+    html.screen-locked body{position:fixed!important;inset:0!important;width:100%!important;height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important;display:flex!important;align-items:stretch!important;justify-content:flex-start!important;padding:54px 8px 10px!important}
+    html.screen-locked .app{width:100%!important;max-width:none!important;margin:0!important;transform:none!important;transform-origin:top center!important;}
+    html.screen-locked header{position:static!important;display:block!important;height:0!important;min-height:0!important;overflow:visible!important;margin:0!important;padding:0!important}
+    html.screen-locked header>div:first-child{display:none!important}
+    html.screen-locked h1{font-size:20px!important}
+    html.screen-locked .subtitle,html.screen-locked .eyebrow{font-size:10px!important}
+    html.screen-locked .settings-open,html.screen-locked #settings-panel,html.screen-locked .section-title,html.screen-locked .detail,html.screen-locked .actions,html.screen-locked .footnote{display:none!important}
+    html.screen-locked .total-card{padding:clamp(14px,2.2vh,20px) clamp(15px,4vw,22px) 14px!important;border-radius:22px!important;box-shadow:0 7px 0 #1748ae,0 13px 20px #2563eb30,inset 0 2px 3px #ffffff70!important}
+    html.screen-locked #total{font-size:clamp(32px,8.7vw,46px)!important;margin:6px 0 10px!important}
+    html.screen-locked .stats{padding-top:9px!important;font-size:clamp(12px,3.5vw,14px)!important}html.screen-locked .stats strong{font-size:clamp(15px,4.2vw,18px)!important}
+    html.screen-locked .section-title{margin:11px 2px 7px!important}
+    html.screen-locked .grid{gap:clamp(9px,2vw,13px)!important}
+    html.screen-locked .color-button{min-height:clamp(92px,11.5vh,118px)!important;padding:clamp(10px,1.7vh,15px) 12px 10px!important;border-radius:18px!important}
+    html.screen-locked .pad-tile .color-button{padding-right:54px!important}
+    html.screen-locked .color-name{font-size:clamp(12px,3.5vw,15px)!important}
+    html.screen-locked .amount{font-size:clamp(19px,5.4vw,24px)!important}
+    html.screen-locked .count{margin-top:4px!important;padding:4px 9px!important;font-size:clamp(10px,3vw,12px)!important}
+    html.screen-locked .pad-minus{top:7px!important;right:7px!important;width:clamp(32px,9vw,38px)!important;height:clamp(32px,9vw,38px)!important}
+    html.screen-locked .detail{margin-top:10px!important;padding:10px!important}
+    html.screen-locked .detail-row{padding:5px 0!important;font-size:10px!important}
+    html.screen-locked .actions{gap:7px!important;margin-top:9px!important}
+    html.screen-locked .action-button{min-height:36px!important;font-size:10px!important;padding:5px!important}
+    html.screen-locked .footnote{margin:7px 5px 0!important;font-size:9px!important}
+    html.screen-locked #lock-toggle{position:fixed;z-index:10000;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;width:auto;min-width:96px;height:auto;min-height:38px;padding:7px 10px;border-radius:12px;background:#0f172a;color:#fff;font-size:11px;box-shadow:0 5px 18px #0005;touch-action:manipulation}
+    .app{width:100%;max-width:560px;margin:0 auto}
+    header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:5px 0 17px}
+    .eyebrow{color:#2563eb;font-size:11px;font-weight:900;letter-spacing:1.8px}
+    h1{margin:4px 0 2px;font-size:25px;line-height:1.2}
+    .subtitle{margin:0;color:var(--muted);font-size:12px}
+    .settings-open{flex-shrink:0;border:0;border-bottom:4px solid #080f1e;border-radius:14px;padding:11px 13px;background:linear-gradient(145deg,#475569,#172033 72%);color:#fff;font-size:13px;font-weight:850;box-shadow:0 7px 14px #17203335,inset 0 2px 2px #ffffff35;cursor:pointer;transition:transform .1s,box-shadow .1s}
+    .total-card{position:relative;overflow:hidden;padding:21px 19px 17px;border:1px solid #ffffff65;border-bottom:6px solid #1648b5;border-radius:25px;color:white;background:linear-gradient(145deg,#4385ff 0%,#2563eb 46%,#087fc5 100%);box-shadow:0 9px 0 #1748ae,0 18px 30px #2563eb40,inset 0 2px 3px #ffffff70}
+    .total-card:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(155deg,#ffffff25 0%,transparent 38%,#001c5a12 100%)}
+    .total-card:after{content:"";position:absolute;width:190px;height:190px;border-radius:50%;right:-72px;top:-100px;background:radial-gradient(circle at 35% 35%,#ffffff48,#ffffff08 68%);box-shadow:inset -10px -12px 22px #003b9b18}
+    .total-label{position:relative;z-index:1;font-size:12px;font-weight:900;letter-spacing:1.5px;opacity:.92}
+    #total{position:relative;z-index:1;margin:7px 0 13px;font-size:clamp(30px,8.5vw,43px);font-weight:950;line-height:1.12;letter-spacing:-1px;overflow-wrap:anywhere}
+    .stats{position:relative;z-index:1;display:flex;justify-content:space-between;gap:12px;border-top:1px solid #ffffff45;padding-top:11px;font-size:12px}
+    .stats strong{font-size:15px}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:21px 2px 10px}
+    .section-title h2{margin:0;font-size:16px}
+    .section-title span{color:var(--muted);font-size:11px;text-align:right}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .color-button{position:relative;isolation:isolate;overflow:hidden;min-height:116px;border:1px solid #ffffff50;border-bottom:6px solid #0003;border-radius:20px;padding:14px 13px 12px;display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;text-align:left;color:var(--fg);background:var(--bg);cursor:pointer;box-shadow:0 7px 0 #0002,0 14px 20px #0f172a20,inset 0 2px 2px #ffffff65,inset 0 -3px 5px #00000012;transition:transform .1s,filter .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+    .color-button:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(145deg,#ffffff35 0%,transparent 42%,#00000012 100%)}
+    .color-button:active{transform:translateY(5px);filter:brightness(.96);box-shadow:0 2px 0 #0002,0 5px 10px #0f172a18,inset 0 2px 5px #00000016}
+    .color-name{font-size:13px;font-weight:950;letter-spacing:1px;text-transform:uppercase;overflow-wrap:anywhere}
+    .amount{font-size:21px;font-weight:950;letter-spacing:-.5px;overflow-wrap:anywhere}
+    .count{align-self:flex-end;margin-top:7px;padding:5px 10px;border:1px solid #ffffff30;border-radius:99px;background:#ffffff42;box-shadow:0 2px 5px #00000012,inset 0 1px 1px #ffffff50;font-size:11px;font-weight:900;text-shadow:0 1px 1px #00000012}
+    .timer-inline{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:10px;margin:13px 0 10px;padding:10px 11px;border:1px solid #ffffff70;border-radius:15px;background:linear-gradient(145deg,#ffffff30,#dbeafe25);box-shadow:inset 0 1px 2px #ffffff45}
+    .timer-label{font-size:10px;font-weight:950;letter-spacing:1.2px;color:#eff6ff}
+    .timer-status{display:block;margin-top:3px;color:#dbeafe;font-size:10px;font-weight:800}
+    #timer-value{font-size:clamp(18px,5.4vw,25px);font-weight:950;letter-spacing:.5px;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #0f172a55;white-space:nowrap}
+    .timer-button{position:relative;z-index:1;min-width:78px;min-height:36px;border:0;border-bottom:3px solid #087443;border-radius:10px;padding:6px 10px;background:linear-gradient(145deg,#4ade80,#16a34a 72%,#15803d);color:#fff;font-size:11px;font-weight:950;letter-spacing:.5px;box-shadow:0 4px 8px #16653430,inset 0 2px 2px #ffffff70;cursor:pointer;touch-action:manipulation}
+    .timer-button.running{border-bottom-color:#991b1b;background:linear-gradient(145deg,#fb7185,#dc2626 72%,#b91c1c);box-shadow:0 4px 8px #991b1b30,inset 0 2px 2px #ffffff70}
+    .timer-button:active{transform:translateY(2px);border-bottom-width:1px}
+    html.screen-locked .timer-inline{grid-template-columns:minmax(0,1fr) auto auto;gap:clamp(7px,2vw,11px);margin:10px 0 9px;padding:9px 10px}
+    html.screen-locked #timer-value{font-size:clamp(19px,5.5vw,27px)!important}
+    html.screen-locked .timer-button{min-width:clamp(68px,20vw,82px);min-height:38px;padding:6px 9px;font-size:clamp(10px,3vw,12px)}
+    .pad-tile{position:relative;min-width:0}
+    .pad-tile .color-button{width:100%;padding-right:51px}
+    .pad-minus{position:absolute;z-index:3;top:8px;right:8px;width:34px;height:34px;display:grid;place-items:center;border:1px solid #ffffffb0;border-bottom:4px solid #94a3b8;border-radius:11px;background:linear-gradient(145deg,#ffffff,#e2e8f0);color:#334155;font-size:24px;font-weight:950;line-height:1;box-shadow:0 4px 8px #0f172a25,inset 0 1px 2px #ffffff;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+    .pad-minus:active:not(:disabled){transform:translateY(3px);border-bottom-width:1px;box-shadow:0 1px 3px #0f172a20}
+    .pad-minus:disabled{opacity:.35;cursor:not-allowed}
+    .detail{margin-top:19px;padding:16px;border:1px solid #ffffff;border-bottom:4px solid #d5e0eb;border-radius:20px;background:linear-gradient(150deg,#ffffff,#f4f8fc);box-shadow:0 7px 17px #0f172a12,inset 0 2px 2px #ffffff}
+    .detail h2{margin:0 0 9px;font-size:15px}
+    .detail-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed #e2e8f0;font-size:12px}
+    .detail-row:last-child{border-bottom:0;padding-bottom:0}
+    .detail-row strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+    .actions{display:flex;gap:9px;margin-top:14px}
+    .action-button{flex:1;min-height:46px;border-radius:13px;border:1px solid #cbd5e1;border-bottom:4px solid #b8c5d4;background:linear-gradient(145deg,#ffffff,#eaf0f7);color:#334155;font-size:12px;font-weight:900;cursor:pointer;padding:8px;box-shadow:0 5px 10px #0f172a12,inset 0 1px 2px #ffffff;transition:transform .1s,box-shadow .1s}
+    .action-button.reset{border-color:#fecaca;border-bottom-color:#e99ca7;background:linear-gradient(145deg,#fffafa,#ffe4e8);color:#be123c}
+    .action-button:disabled{opacity:.45;cursor:not-allowed}
+    .footnote{text-align:center;color:#64748b;font-size:11px;margin:12px 8px 0;line-height:1.5}
+    #settings-panel{margin-top:15px;padding:16px;border:1px solid #bfdbfe;border-radius:19px;background:#ffffffed;box-shadow:0 10px 24px #1e40af12}
+    .settings-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px}
+    .settings-heading h2{margin:0;font-size:18px}
+    .close-settings{border:0;background:#e2e8f0;color:#334155;border-radius:10px;padding:8px 11px;font-size:12px;font-weight:800}
+    .help{margin:5px 0 14px;color:var(--muted);font-size:12px;line-height:1.45}
+    .form-card{padding:12px;margin:11px 0;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
+    .form-card h3{margin:0 0 10px;font-size:14px}
+    .field-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+    .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:11px;font-weight:850;color:#475569}
+    .field input[type=text],.field input[type=number]{width:100%;min-width:0;height:42px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#172033;font-size:14px;outline:none}
+    .field input:focus{border-color:#2563eb;box-shadow:0 0 0 3px #2563eb18}
+    .field input[type=color]{width:100%;height:42px;padding:3px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+    .primary-button{width:100%;min-height:44px;margin-top:10px;border:0;border-bottom:4px solid #1748b5;border-radius:11px;background:linear-gradient(145deg,#4b8aff,#2563eb 70%);color:#fff;font-size:13px;font-weight:950;cursor:pointer;box-shadow:0 6px 12px #2563eb30,inset 0 2px 2px #ffffff55}
+    .pad-editor{padding:12px;margin:9px 0;border:1px solid #e2e8f0;border-radius:14px;background:#fff}
+    .editor-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+    .swatch{width:19px;height:19px;border-radius:6px;border:1px solid #0002;flex-shrink:0}
+    .editor-title{font-size:12px;font-weight:900;color:#334155;flex:1}
+    .editor-actions{display:flex;gap:8px;margin-top:9px}
+    .small-button{flex:1;min-height:38px;border:1px solid #cbd5e1;border-bottom:3px solid #bac7d5;border-radius:10px;background:linear-gradient(145deg,#ffffff,#eef3f8);color:#334155;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 8px #0f172a10}
+    .small-button.delete{border-color:#fecaca;border-bottom-color:#e99ca7;background:linear-gradient(145deg,#fffafa,#ffe4e8);color:#be123c}
+    .lock-toggle:active,.settings-open:active,.primary-button:active,.small-button:active,.action-button:active{transform:translateY(3px);filter:brightness(.97);box-shadow:0 2px 4px #0f172a18}
+    @supports (background:color-mix(in srgb,#fff, #000)) {
+      .color-button{border-bottom-color:color-mix(in srgb,var(--bg),#000 30%);box-shadow:0 7px 0 color-mix(in srgb,var(--bg),#000 32%),0 14px 20px #0f172a20,inset 0 2px 2px #ffffff70,inset 0 -3px 5px #00000014}
+      .color-button:active{box-shadow:0 2px 0 color-mix(in srgb,var(--bg),#000 32%),0 5px 10px #0f172a18,inset 0 2px 5px #00000018}
+    }
+    .empty{padding:15px;text-align:center;color:var(--muted);font-size:12px}
+    .hidden{display:none!important}
+    @media(max-width:360px){body{padding:13px 9px 24px}h1{font-size:22px}.grid{gap:9px}.color-button{min-height:108px;padding:12px 10px 10px;border-radius:17px}.amount{font-size:19px}.settings-open{padding:10px;font-size:12px}.total-card{box-shadow:0 7px 0 #1748ae,0 14px 22px #2563eb35,inset 0 2px 3px #ffffff70}}
+  </style>
+  <script>
+    // Pulihkan posisi dan status kunci sebelum halaman ditampilkan agar reload tidak menggeser tampilan.
+    (function(){
+      try {
+        var savedLock = localStorage.getItem('kalkulatorWarna_screenLock');
+        if (savedLock !== null) {
+          if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+          document.documentElement.classList.add('screen-locked');
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <div class="eyebrow">KALKULATOR OTOMATIS</div>
+        <h1>Hitung Berdasarkan Warna</h1>
+        <p class="subtitle">Tekan pad untuk menambahkan nominal</p>
+      </div>
+      <div class="header-actions">
+        <button class="lock-toggle" id="lock-toggle" type="button" aria-label="Kunci tampilan" title="Kunci tampilan">🔒</button>
+        <button class="settings-open" id="open-settings" type="button">⚙ Pengaturan</button>
+      </div>
+    </header>
+
+    <section class="total-card" aria-live="polite">
+      <div class="total-label">TOTAL AKUMULASI</div>
+      <div id="total">Rp 0</div>
+      <div class="timer-inline" aria-label="Stopwatch waktu perhitungan">
+        <div>
+          <div class="timer-label">WAKTU PERHITUNGAN</div>
+          <div id="timer-status" class="timer-status">Belum dimulai</div>
+        </div>
+        <div id="timer-value" aria-live="off">00:00:00</div>
+        <button class="timer-button" id="timer-toggle" type="button">▶ START</button>
+      </div>
+      <div class="stats">
+        <div>Total tekan<br><strong id="tap-total">0 pack</strong></div>
+        <div style="text-align:right">Jumlah pad aktif<br><strong id="active-colors">0 pad</strong></div>
+      </div>
+    </section>
+
+    <section id="settings-panel" class="hidden" aria-label="Pengaturan pad">
+      <div class="settings-heading">
+        <h2>⚙ Pengaturan Pad</h2>
+        <button class="close-settings" id="close-settings" type="button">Tutup ✕</button>
+      </div>
+      <p class="help">Tambah pad baru, atau ubah nama, warna, dan nominal pad yang sudah ada. Perubahan disimpan otomatis.</p>
+
+      <div class="form-card" aria-label="Pengaturan getaran">
+        <h3>📳 Getaran HP</h3>
+        <p class="help" style="margin:0 0 10px">Getaran singkat saat pad ditekan, dikurangi, serta stopwatch dimulai atau dihentikan. Fitur bergantung pada dukungan browser dan pengaturan HP.</p>
+        <button class="small-button" id="vibration-toggle" type="button" aria-pressed="true">📳 Getaran ON · tekan untuk mematikan</button>
+        <div class="editor-actions">
+          <button class="small-button" id="vibration-test" type="button">Tes getar</button>
+        </div>
+      </div>
+
+      <form class="form-card" id="add-pad-form">
+        <h3>＋ Tambah Pad Baru</h3>
+        <div class="field-grid">
+          <div class="field">
+            <label for="new-name">Nama pad</label>
+            <input id="new-name" type="text" maxlength="24" placeholder="Contoh: ORANYE" required>
+          </div>
+          <div class="field">
+            <label for="new-amount">Nominal (rupiah)</label>
+            <input id="new-amount" type="number" min="0" step="1" inputmode="numeric" placeholder="Contoh: 20000" required>
+          </div>
+          <div class="field full">
+            <label for="new-color">Warna pad</label>
+            <input id="new-color" type="color" value="#f97316">
+          </div>
+        </div>
+        <button class="primary-button" type="submit">Tambah Pad</button>
+      </form>
+
+      <div class="section-title" style="margin:17px 1px 8px">
+        <h2>Ubah Pad yang Ada</h2>
+        <span id="pad-count-label"></span>
+      </div>
+      <div id="pad-editors"></div>
+    </section>
+
+    <div class="section-title">
+      <h2>Pilih tombol warna</h2>
+      <span>Setiap tekan = tambah nominal</span>
+    </div>
+    <section class="grid" id="color-grid" aria-label="Tombol pad"></section>
+
+    <section class="detail">
+      <h2>Rincian hitungan</h2>
+      <div id="breakdown"></div>
+    </section>
+    <div class="actions">
+      <button class="action-button" id="undo-button" type="button">↶ Batalkan tekan terakhir</button>
+      <button class="action-button reset" id="reset-button" type="button">Reset semua</button>
+    </div>
+    <p class="footnote">Pengaturan pad dan hitungan tersimpan otomatis di perangkat ini. Menutup halaman tidak menghapus data.</p>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+      const STORAGE_KEY = 'kalkulatorWarna_v2';
+      const OLD_STORAGE_KEY = 'kalkulatorWarna_v1';
+      const defaults = [
+        {id:'kuning',name:'Kuning',amount:12000,color:'#facc15'},
+        {id:'merah',name:'Merah',amount:13000,color:'#dc2626'},
+        {id:'hijau',name:'Hijau',amount:14000,color:'#16a34a'},
+        {id:'biru',name:'Biru',amount:15000,color:'#2563eb'},
+        {id:'ungu',name:'Ungu',amount:17000,color:'#9333ea'},
+        {id:'abu',name:'Abu-abu',amount:18000,color:'#6b7280'},
+        {id:'hitam',name:'Hitam',amount:23000,color:'#171717'}
+      ];
+      let pads = defaults.map(p => ({...p}));
+      let counts = Object.fromEntries(pads.map(p => [p.id, 0]));
+      let history = [];
+      const LOCK_STORAGE_KEY = 'kalkulatorWarna_screenLock';
+      let timerState = {running:false,startedAt:null,elapsedMs:0,stoppedAt:null};
+      let vibrationEnabled = true;
+      let screenLocked = document.documentElement.classList.contains('screen-locked');
+
+      const safeColor = value => /^#[0-9a-fA-F]{6}$/.test(String(value)) ? value : '#64748b';
+      const safeId = value => /^[a-zA-Z0-9_-]{1,70}$/.test(String(value));
+      const rupiah = value => 'Rp ' + Number(value || 0).toLocaleString('id-ID');
+      const total = () => pads.reduce((sum, p) => sum + (counts[p.id] || 0) * p.amount, 0);
+      const tapTotal = () => pads.reduce((sum, p) => sum + (counts[p.id] || 0), 0);
+      const textColor = hex => {
+        const h = safeColor(hex).slice(1);
+        const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+        return (r*299 + g*587 + b*114)/1000 > 155 ? '#172033' : '#ffffff';
+      };
+
+      function loadData() {
+        try {
+          let saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+          if (!saved) {
+            const old = JSON.parse(localStorage.getItem(OLD_STORAGE_KEY) || 'null');
+            if (old && old.counts) saved = {counts:old.counts,history:old.history,pads:defaults};
+          }
+          if (!saved) return;
+          if (Array.isArray(saved.pads) && saved.pads.length) {
+            const parsed = saved.pads.filter(p => p && safeId(p.id) && typeof p.name === 'string' && Number.isSafeInteger(Number(p.amount)) && Number(p.amount) >= 0)
+              .map(p => ({id:String(p.id),name:p.name.trim().slice(0,24) || 'Pad',amount:Number(p.amount),color:safeColor(p.color)}));
+            if (parsed.length) pads = parsed;
+          }
+          counts = Object.fromEntries(pads.map(p => {
+            const n = Number(saved.counts && saved.counts[p.id]);
+            return [p.id,Number.isSafeInteger(n) && n > 0 ? n : 0];
+          }));
+          history = Array.isArray(saved.history) ? saved.history.filter(id => pads.some(p => p.id === id)).slice(-5000) : [];
+          if (typeof saved.vibrationEnabled === 'boolean') vibrationEnabled = saved.vibrationEnabled;
+          if (saved.timer && typeof saved.timer === 'object') {
+            const startedAt = Number(saved.timer.startedAt);
+            const elapsedMs = Number(saved.timer.elapsedMs);
+            const running = saved.timer.running === true && Number.isFinite(startedAt) && startedAt > 0;
+            timerState = {
+              running,
+              startedAt: running ? startedAt : null,
+              elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : 0,
+              stoppedAt: Number.isFinite(Number(saved.timer.stoppedAt)) ? Number(saved.timer.stoppedAt) : null
+            };
+          }
+        } catch (error) {
+          console.warn('Data tersimpan tidak dapat dibaca:', error);
+        }
+      }
+
+      function save() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({pads,counts,history,timer:timerState,vibrationEnabled}));
+        } catch (error) {
+          alert('Penyimpanan perangkat tidak tersedia. Silakan gunakan Chrome dan jangan memakai mode samaran.');
+          console.warn('Data belum dapat disimpan:', error);
+        }
+      }
+
+      function vibrate(pattern) {
+        if (!vibrationEnabled) return;
+        if (!('vibrate' in navigator)) return;
+        try { navigator.vibrate(pattern); } catch (e) { /* Getaran tidak didukung atau diblokir browser. */ }
+      }
+
+      function updateVibrationButton() {
+        const button = document.getElementById('vibration-toggle');
+        if (!button) return;
+        button.textContent = vibrationEnabled ? '📳 Getaran ON · tekan untuk mematikan' : '🔕 Getaran OFF · tekan untuk mengaktifkan';
+        button.setAttribute('aria-pressed', vibrationEnabled ? 'true' : 'false');
+      }
+
+      function updateLockButton() {
+        const button = document.getElementById('lock-toggle');
+        if (!button) return;
+        button.textContent = screenLocked ? '🔓 Buka Kunci' : '🔒';
+        button.setAttribute('aria-label', screenLocked ? 'Buka kunci tampilan' : 'Kunci tampilan');
+        button.title = screenLocked ? 'Buka kunci tampilan' : 'Kunci tampilan';
+      }
+
+      function fitLockedApp() {
+        // Tidak mengecilkan seluruh aplikasi. Ukuran kartu dan pad diatur responsif oleh CSS.
+        if (screenLocked) document.documentElement.style.setProperty('--lock-scale', '1');
+      }
+
+      function lockScreen() {
+        try { localStorage.setItem(LOCK_STORAGE_KEY, '1'); } catch (e) {}
+        document.getElementById('settings-panel').classList.add('hidden');
+        window.scrollTo(0, 0);
+        document.documentElement.style.setProperty('--lock-scale', '1');
+        document.documentElement.classList.add('screen-locked');
+        screenLocked = true;
+        updateLockButton();
+        fitLockedApp();
+      }
+
+      function unlockScreen() {
+        document.documentElement.classList.remove('screen-locked');
+        document.documentElement.style.removeProperty('--lock-scale');
+        screenLocked = false;
+        try { localStorage.removeItem(LOCK_STORAGE_KEY); } catch (e) {}
+        updateLockButton();
+        window.scrollTo(0, 0);
+      }
+
+      function elapsedNow() {
+        if (timerState.running && Number.isFinite(timerState.startedAt)) {
+          return Math.max(0, Date.now() - timerState.startedAt);
+        }
+        return Math.max(0, timerState.elapsedMs || 0);
+      }
+
+      function formatDuration(milliseconds) {
+        const seconds = Math.floor(Math.max(0, milliseconds) / 1000);
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        return [hours,minutes,remainingSeconds].map(n => String(n).padStart(2,'0')).join(':');
+      }
+
+      function renderTimer() {
+        const value = document.getElementById('timer-value');
+        const status = document.getElementById('timer-status');
+        const button = document.getElementById('timer-toggle');
+        if (!value || !status || !button) return;
+        value.textContent = formatDuration(elapsedNow());
+        if (timerState.running) {
+          status.textContent = 'Sedang berjalan';
+          button.textContent = '■ STOP';
+          button.classList.add('running');
+          button.setAttribute('aria-label','Stop stopwatch');
+        } else {
+          status.textContent = timerState.stoppedAt ? 'Dihentikan' : 'Belum dimulai';
+          button.textContent = '▶ START';
+          button.classList.remove('running');
+          button.setAttribute('aria-label','Mulai stopwatch');
+        }
+      }
+
+      function toggleTimer() {
+        const wasRunning = timerState.running;
+        vibrate(wasRunning ? [65,35,65] : 35);
+        if (timerState.running) {
+          timerState.elapsedMs = elapsedNow();
+          timerState.running = false;
+          timerState.startedAt = null;
+          timerState.stoppedAt = Date.now();
+        } else {
+          // START pertama mulai dari nol; START setelah STOP melanjutkan dari durasi terakhir.
+          timerState.startedAt = Date.now() - Math.max(0, timerState.elapsedMs || 0);
+          timerState.running = true;
+          timerState.stoppedAt = null;
+        }
+        save();
+        renderTimer();
+      }
+
+      function renderMain() {
+        document.getElementById('total').textContent = rupiah(total());
+        document.getElementById('tap-total').textContent = tapTotal().toLocaleString('id-ID') + ' pack';
+        document.getElementById('active-colors').textContent = pads.length + ' pad';
+        const undo = document.getElementById('undo-button');
+        undo.disabled = history.length === 0;
+
+        const grid = document.getElementById('color-grid');
+        grid.replaceChildren();
+        pads.forEach(p => {
+          const tile = document.createElement('div');
+          tile.className = 'pad-tile';
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'color-button';
+          button.dataset.id = p.id;
+          button.dataset.action = 'add';
+          button.setAttribute('aria-label','Tambah ' + p.name + ', ' + rupiah(p.amount));
+          button.style.setProperty('--bg', p.color);
+          button.style.setProperty('--fg', textColor(p.color));
+          const name = document.createElement('span');
+          name.className = 'color-name';
+          name.textContent = p.name;
+          const amount = document.createElement('span');
+          amount.className = 'amount';
+          amount.textContent = rupiah(p.amount);
+          const count = document.createElement('span');
+          count.className = 'count';
+          count.textContent = (counts[p.id] || 0).toLocaleString('id-ID') + ' pack';
+          button.append(name,amount,count);
+          const minus = document.createElement('button');
+          minus.type = 'button';
+          minus.className = 'pad-minus';
+          minus.dataset.id = p.id;
+          minus.dataset.action = 'minus';
+          minus.textContent = '−';
+          minus.disabled = (counts[p.id] || 0) <= 0;
+          minus.setAttribute('aria-label','Kurangi satu hitungan ' + p.name);
+          minus.title = 'Kurangi satu hitungan';
+          tile.append(button,minus);
+          grid.append(tile);
+        });
+
+        const breakdown = document.getElementById('breakdown');
+        breakdown.replaceChildren();
+        if (!pads.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Belum ada pad. Tambahkan melalui Pengaturan.';
+          breakdown.append(empty);
+        }
+        pads.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'detail-row';
+          const label = document.createElement('span');
+          label.textContent = p.name + ' (' + (counts[p.id] || 0).toLocaleString('id-ID') + ' × ' + rupiah(p.amount) + ')';
+          const value = document.createElement('strong');
+          value.textContent = rupiah((counts[p.id] || 0) * p.amount);
+          row.append(label,value);
+          breakdown.append(row);
+        });
+      }
+
+      function renderEditors() {
+        const holder = document.getElementById('pad-editors');
+        holder.replaceChildren();
+        document.getElementById('pad-count-label').textContent = pads.length + ' pad';
+        if (!pads.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Belum ada pad. Gunakan formulir Tambah Pad Baru.';
+          holder.append(empty);
+          return;
+        }
+        pads.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'pad-editor';
+          const top = document.createElement('div');
+          top.className = 'editor-top';
+          const swatch = document.createElement('span');
+          swatch.className = 'swatch';
+          swatch.style.background = p.color;
+          const title = document.createElement('span');
+          title.className = 'editor-title';
+          title.textContent = 'Pad: ' + p.name;
+          top.append(swatch,title);
+          const fields = document.createElement('div');
+          fields.className = 'field-grid';
+          fields.innerHTML = '<div class="field"><label>Nama pad</label><input type="text" maxlength="24" data-field="name"></div><div class="field"><label>Nominal (rupiah)</label><input type="number" min="0" step="1" inputmode="numeric" data-field="amount"></div><div class="field full"><label>Warna pad</label><input type="color" data-field="color"></div>';
+          fields.querySelector('[data-field="name"]').value = p.name;
+          fields.querySelector('[data-field="amount"]').value = p.amount;
+          fields.querySelector('[data-field="color"]').value = p.color;
+          const actions = document.createElement('div');
+          actions.className = 'editor-actions';
+          const saveButton = document.createElement('button');
+          saveButton.type = 'button';
+          saveButton.className = 'small-button';
+          saveButton.textContent = 'Simpan perubahan';
+          saveButton.addEventListener('click', () => {
+            const name = fields.querySelector('[data-field="name"]').value.trim();
+            const amountText = fields.querySelector('[data-field="amount"]').value;
+            const amount = Number(amountText);
+            const color = fields.querySelector('[data-field="color"]').value;
+            if (!name) { alert('Nama pad tidak boleh kosong.'); return; }
+            if (amountText === '' || !Number.isSafeInteger(amount) || amount < 0) { alert('Nominal harus berupa angka rupiah bulat, minimal 0.'); return; }
+            p.name = name.slice(0,24);
+            p.amount = amount;
+            p.color = safeColor(color);
+            save();
+            renderMain();
+            renderEditors();
+          });
+          const deleteButton = document.createElement('button');
+          deleteButton.type = 'button';
+          deleteButton.className = 'small-button delete';
+          deleteButton.textContent = 'Hapus pad';
+          deleteButton.addEventListener('click', () => {
+            const n = counts[p.id] || 0;
+            const message = 'Hapus pad "' + p.name + '"?' + (n ? '\nHitungan ' + n + ' pack dan nilainya juga akan dihapus dari total.' : '');
+            if (!confirm(message)) return;
+            pads = pads.filter(item => item.id !== p.id);
+            delete counts[p.id];
+            history = history.filter(id => id !== p.id);
+            save();
+            renderMain();
+            renderEditors();
+          });
+          actions.append(saveButton,deleteButton);
+          card.append(top,fields,actions);
+          holder.append(card);
+        });
+      }
+
+      document.getElementById('lock-toggle').addEventListener('click', () => {
+        if (screenLocked) unlockScreen();
+        else lockScreen();
+      });
+
+      // Tahan tombol/gesture Back browser agar halaman kalkulator tidak langsung tertinggal.
+      // Navigasi Back native Android/Home tetap berada di luar kendali halaman web.
+      function armBackGuard() {
+        try { history.pushState({kalkulatorWarnaGuard:true}, '', location.href); } catch (e) {}
+      }
+      armBackGuard();
+      window.addEventListener('popstate', () => {
+        armBackGuard();
+      });
+
+      // Ketika terkunci, cegah scroll, drag/geser browser, dan navigasi swipe tepi di dalam halaman.
+      const stopPageGesture = event => {
+        if (screenLocked) event.preventDefault();
+      };
+      document.addEventListener('touchmove', stopPageGesture, {passive:false});
+      document.addEventListener('wheel', stopPageGesture, {passive:false});
+      document.addEventListener('gesturestart', stopPageGesture, {passive:false});
+      document.addEventListener('keydown', event => {
+        if (!screenLocked) return;
+        const blockedKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' '];
+        if (blockedKeys.includes(event.key) && !['BUTTON','INPUT'].includes(document.activeElement && document.activeElement.tagName)) event.preventDefault();
+      });
+
+      document.getElementById('open-settings').addEventListener('click', () => {
+        if (screenLocked) return;
+        document.getElementById('settings-panel').classList.remove('hidden');
+        renderEditors();
+        document.getElementById('settings-panel').scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      document.getElementById('close-settings').addEventListener('click', () => {
+        document.getElementById('settings-panel').classList.add('hidden');
+      });
+
+      document.getElementById('vibration-toggle').addEventListener('click', () => {
+        vibrationEnabled = !vibrationEnabled;
+        save();
+        updateVibrationButton();
+        if (vibrationEnabled) vibrate(45);
+      });
+      document.getElementById('vibration-test').addEventListener('click', () => {
+        if (!vibrationEnabled) {
+          alert('Aktifkan Getaran ON terlebih dahulu.');
+          return;
+        }
+        vibrate([45,55,45]);
+      });
+
+      document.getElementById('add-pad-form').addEventListener('submit', event => {
+        event.preventDefault();
+        const name = document.getElementById('new-name').value.trim();
+        const amountText = document.getElementById('new-amount').value;
+        const amount = Number(amountText);
+        const color = document.getElementById('new-color').value;
+        if (!name) { alert('Isi nama pad terlebih dahulu.'); return; }
+        if (amountText === '' || !Number.isSafeInteger(amount) || amount < 0) { alert('Nominal harus berupa angka rupiah bulat, minimal 0.'); return; }
+        const id = 'pad-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+        pads.push({id,name:name.slice(0,24),amount,color:safeColor(color)});
+        counts[id] = 0;
+        save();
+        event.target.reset();
+        document.getElementById('new-color').value = '#f97316';
+        renderMain();
+        renderEditors();
+        alert('Pad "' + name + '" berhasil ditambahkan.');
+      });
+
+      document.getElementById('timer-toggle').addEventListener('click', toggleTimer);
+
+      document.getElementById('color-grid').addEventListener('click', event => {
+        const button = event.target.closest('button[data-id][data-action]');
+        if (!button || button.disabled) return;
+        const id = button.dataset.id;
+        const pad = pads.find(p => p.id === id);
+        if (!pad) return;
+        if (button.dataset.action === 'minus') {
+          if ((counts[id] || 0) <= 0) return;
+          // Getaran minus dibuat lebih terasa daripada sebelumnya.
+          vibrate(45);
+          counts[id] -= 1;
+          const lastMatchingIndex = history.lastIndexOf(id);
+          if (lastMatchingIndex !== -1) history.splice(lastMatchingIndex,1);
+          save();
+          renderMain();
+          return;
+        }
+        if (button.dataset.action === 'add') {
+          if ((counts[id] || 0) >= Number.MAX_SAFE_INTEGER) return;
+          // Gunakan pola yang jelas seperti Tes Getar agar terasa saat pad ditekan.
+          vibrate([45,55,45]);
+          counts[id] = (counts[id] || 0) + 1;
+          history.push(id);
+          if (history.length > 5000) history.shift();
+          save();
+          renderMain();
+        }
+      });
+
+      document.getElementById('undo-button').addEventListener('click', () => {
+        const lastId = history.pop();
+        if (!lastId || !counts[lastId]) return;
+        counts[lastId] -= 1;
+        save();
+        renderMain();
+      });
+
+      document.getElementById('reset-button').addEventListener('click', () => {
+        if (tapTotal() === 0) return;
+        if (!confirm('Hapus semua hitungan dan mulai dari nol? Pengaturan pad tetap tersimpan.')) return;
+        pads.forEach(p => counts[p.id] = 0);
+        history = [];
+        save();
+        renderMain();
+      });
+
+      loadData();
+      renderMain();
+      renderTimer();
+      updateLockButton();
+      updateVibrationButton();
+      if (screenLocked) fitLockedApp();
+      window.addEventListener('resize', fitLockedApp);
+      window.setInterval(() => { if (timerState.running) renderTimer(); }, 1000);
+    })();
+  </script>
+</body>
+</html>
